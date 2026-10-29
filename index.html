@@ -13,8 +13,9 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--tx);font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
 #app{display:-webkit-flex;display:flex;height:100%;padding:12px}
 .col{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-width:0;margin:0 6px}
-#left{-webkit-flex:0 0 36%;flex:0 0 36%}
-#right{-webkit-flex:1 1 0;flex:1 1 0}
+#left{-webkit-flex:0 0 31%;flex:0 0 31%}
+#mid{-webkit-flex:1 1 0;flex:1 1 0}
+#right{-webkit-flex:0 0 27%;flex:0 0 27%}
 .card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;min-height:0}
 .card:last-child{margin-bottom:0}
 .grow{-webkit-flex:1 1 0;flex:1 1 0;overflow:auto;-webkit-overflow-scrolling:touch}
@@ -43,8 +44,8 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
 .tabs{display:-webkit-flex;display:flex;overflow-x:auto;margin-bottom:8px}
 .tab{white-space:nowrap;margin-right:6px;font-size:14px;padding:7px 12px}
 .tab.on{background:var(--ac);color:#1b1206;font-weight:600}
-#photo{position:relative;width:100%;padding-top:56.25%;-webkit-flex:none;flex:none;margin-top:12px;border-radius:18px;overflow:hidden;background:#000}
-.ly{position:absolute;left:0;top:0;right:0;bottom:0;background-color:#000;background-repeat:no-repeat;background-size:contain;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
+#photo{position:relative;-webkit-flex:1 1 0;flex:1 1 0;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#243b6b,#6b3a5e 60%,#c46a3a)}
+.ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:cover;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
 .ly.on{opacity:1}
 #tools{position:absolute;right:10px;bottom:10px;opacity:.85}
 #tools button{background:rgba(0,0,0,.55);color:#fff;margin-left:6px;font-size:13px}
@@ -53,8 +54,9 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
  body{overflow:auto}
  #app{display:block;height:auto}
  .col{margin:0}
- #left,#right{display:block}
- #left{margin-bottom:12px}
+ #left,#mid,#right{display:block}
+ #photo{height:50vh;margin-bottom:12px;-webkit-flex:none;flex:none}
+ #mid{margin-bottom:12px}
  .card{margin-bottom:12px}
 }
 </style>
@@ -77,13 +79,7 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
    <input type="text" id="evin" placeholder="Novo compromisso…">
   </div>
  </div>
- <div class="col" id="right">
-  <div class="card grow" style="margin-bottom:0">
-   <div class="hd"><b>Tarefas</b><button id="nl">+ Lista</button></div>
-   <div class="tabs" id="tabs"></div>
-   <input type="text" id="tdin" placeholder="Nova tarefa…">
-   <div id="todos"></div>
-  </div>
+ <div class="col" id="mid">
   <div id="photo">
    <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
    <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
@@ -96,6 +92,14 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
    <input type="file" id="file" accept="image/*" multiple style="display:none">
   </div>
  </div>
+ <div class="col" id="right">
+  <div class="card grow" style="margin-bottom:0">
+   <div class="hd"><b>Tarefas</b><button id="nl">+ Lista</button></div>
+   <div class="tabs" id="tabs"></div>
+   <input type="text" id="tdin" placeholder="Nova tarefa…">
+   <div id="todos"></div>
+  </div>
+ </div>
 </div>
 <script>
 (function(){
@@ -105,8 +109,8 @@ var DRIVE_FOLDER_ID="19b74JjylrfwbQxFWw7SsBXLYGVk9NBKQ";    // ID da pasta do Dr
 var REFRESH_MIN=60;        // a cada quantos minutos buscar fotos novas
 var SLIDE_SEC=15;          // segundos por foto
 var SHUFFLE=true;          // true = ordem aleatória
-var AGENDA_URL="https://script.google.com/macros/s/AKfycbwGa4CKfIJcXWbf2wkcFhMlkSwc7scPCqLz1JHXv8q2ujFNz9ngekc8VQKbpIgEwcVo/exec";   // cole aqui a URL /exec
-var AGENDA_MIN=15;   // atualizar a cada X minutos
+var AGENDA_URL="https://script.google.com/macros/s/AKfycbwGa4CKfIJcXWbf2wkcFhMlkSwc7scPCqLz1JHXv8q2ujFNz9ngekc8VQKbpIgEwcVo/exec";         // cole aqui a URL /exec do Apps Script
+var AGENDA_MIN=15;         // atualizar a agenda a cada X minutos
 /* ================================================== */
 var $=function(i){return document.getElementById(i)};
 function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -140,7 +144,7 @@ function drawCal(){
  $("grid").innerHTML=h;
  var p=sel.split("-");$("sel").textContent="Dia "+parseInt(p[2],10)+" de "+MESES[parseInt(p[1],10)-1];
  var L=events[sel]||[],G=gcal[sel]||[],e="";
-for(i=0;i<G.length;i++)e+='<div class="it"><span class="x"><b style="color:var(--ac)">'+esc(G[i].h||"Dia todo")+'</b> '+esc(G[i].t)+'</span></div>';;
+ for(i=0;i<G.length;i++)e+='<div class="it"><span class="x"><b style="color:var(--ac)">'+esc(G[i].h||"Dia todo")+'</b> '+esc(G[i].t)+'</span></div>';
  for(i=0;i<L.length;i++)e+='<div class="it"><span class="x">'+esc(L[i])+'</span><button class="del" data-i="'+i+'">×</button></div>';
  $("evs").innerHTML=e||'<div class="empty">Nada marcado neste dia.</div>';
 }
@@ -150,11 +154,21 @@ $("evin").onkeydown=function(ev){if(ev.keyCode===13&&this.value.replace(/\s/g,""
 $("pv").onclick=function(){vm--;if(vm<0){vm=11;vy--}drawCal()};
 $("nx").onclick=function(){vm++;if(vm>11){vm=0;vy++}drawCal()};
 drawCal();
+function agendaOk(d){if(d&&typeof d==="object"){gcal=d;save("db_gcal",gcal);drawCal()}}
+function agendaJsonp(){
+ var s=document.createElement("script");
+ window.__agenda=function(d){agendaOk(d);if(s.parentNode)s.parentNode.removeChild(s)};
+ s.src=AGENDA_URL+(AGENDA_URL.indexOf("?")>-1?"&":"?")+"callback=__agenda&_="+new Date().getTime();
+ document.head.appendChild(s);
+}
 function loadAgenda(){
  if(!AGENDA_URL)return;
- var x=new XMLHttpRequest();x.open("GET",AGENDA_URL);
- x.onload=function(){try{gcal=JSON.parse(x.responseText);save("db_gcal",gcal);drawCal()}catch(e){}};
- x.send();
+ try{
+  var x=new XMLHttpRequest();x.open("GET",AGENDA_URL);
+  x.onload=function(){var d=null;try{d=JSON.parse(x.responseText)}catch(e){}if(d)agendaOk(d);else agendaJsonp()};
+  x.onerror=agendaJsonp;
+  x.send();
+ }catch(e){agendaJsonp()}
 }
 loadAgenda();setInterval(loadAgenda,AGENDA_MIN*60000);
 setInterval(function(){var k=key(new Date());if(k!==window.__lastDay){window.__lastDay=k}},60000);
@@ -231,7 +245,6 @@ function driveLoad(){
  }
  page();
 }
-function refresh(){allPhotos(function(a){urls=a;$("hint").style.display=a.length?"none":"block";if(a.length)show(0,true)})}
 setInterval(function(){if(urls.length>1)show(idx+1)},SLIDE_SEC*1000);
 $("add").onclick=function(){$("file").click()};
 $("file").onchange=function(){
