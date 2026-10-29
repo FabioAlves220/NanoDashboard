@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Meu Painel</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <style>
 :root{--bg:#0f1420;--card:#1a2233;--card2:#222c42;--tx:#eef2f8;--mut:#8b97ad;--ac:#ffb454;--ok:#6fd08c;--line:#2c3750;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef1f6;--card:#fff;--card2:#e6ebf3;--tx:#1b2333;--mut:#667389;--ac:#d9780f;--ok:#2e9e55;--line:#d5dce8}}
@@ -43,7 +45,9 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
 .tabs{display:-webkit-flex;display:flex;overflow-x:auto;margin-bottom:8px}
 .tab{white-space:nowrap;margin-right:6px;font-size:14px;padding:7px 12px}
 .tab.on{background:var(--ac);color:#1b1206;font-weight:600}
-#pw{-webkit-flex:none;flex:none;width:80vh;max-width:100%;margin-left:auto}
+#right{padding-bottom:calc(20.25vw + 12px)}
+#right .grow{margin-bottom:0}
+#pw{position:fixed;right:18px;bottom:12px;width:36vw;z-index:5}
 #photo{position:relative;width:100%;height:0;padding-top:56.25%;border-radius:18px;overflow:hidden;background:#000}
 .ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
 .ly.on{opacity:1}
@@ -55,7 +59,8 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
  #app{display:block;height:auto}
  .col{margin:0}
  #left,#right{display:block}
- #pw{width:100%;margin-top:12px}
+ #right{padding-bottom:0}
+ #pw{position:static;width:100%;margin-top:12px}
  .card{margin-bottom:12px}
 }
 </style>
@@ -86,7 +91,7 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
    <div id="todos"></div>
   </div>
   <div id="pw">
-  <div id="photo">
+  <div id="photo"><!-- v5: canto inferior direito, 16:9, foto inteira -->
     <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
     <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
     <div id="tools">
