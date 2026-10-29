@@ -52,7 +52,7 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
 .ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
 .ly.on{opacity:1}
 #tools{position:absolute;right:10px;bottom:10px;opacity:.85}
-#tools button{background:rgba(0,0,0,.55);color:#fff;margin-left:6px;font-size:13px}
+#tools button{background:rgba(0,0,0,.55);color:#fff;margin-left:6px;font-size:13px;padding:6px 10px}
 #hint{position:absolute;left:0;right:0;top:40%;text-align:center;color:#fff;font-size:18px;text-shadow:0 1px 6px rgba(0,0,0,.6);padding:0 20px}
 @media (orientation:portrait){
  body{overflow:auto}
@@ -95,8 +95,9 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
     <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
     <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
     <div id="tools">
-     <button id="fs">Tela cheia</button>
-     <button id="th">Tema</button>
+      <button id="sm">−</button>
+    <button id="bg">+</button>
+    <button id="th">Tema</button>
      <button id="clr">Limpar fotos</button>
      <button id="add" class="ac">+ Fotos</button>
     </div>
@@ -268,10 +269,19 @@ $("file").onchange=function(){
 $("clr").onclick=function(){if(!confirm("Apagar todas as fotos do painel?"))return;
  mem=[];if(idb){try{idb.transaction("p","readwrite").objectStore("p").clear()}catch(e){}}
  urls=[];$("l0").style.backgroundImage="none";$("l1").style.backgroundImage="none";$("hint").style.display="block"};
-$("fs").onclick=function(){var d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen||d.mozRequestFullScreen;if(f)f.call(d)};
 $("th").onclick=function(){var r=document.documentElement,c=r.getAttribute("data-theme");
  var light=c?c==="light":(window.matchMedia&&matchMedia("(prefers-color-scheme:light)").matches);
  var n=light?"dark":"light";r.setAttribute("data-theme",n);save("db_theme",n)};
+var ps=load("db_ps",36);
+function applyPs(){
+ var st=document.getElementById("psz");
+ if(!st){st=document.createElement("style");st.id="psz";document.head.appendChild(st)}
+ st.textContent="@media (orientation:landscape){#pw{width:"+ps+"vw}#right{padding-bottom:calc("+(ps*0.5625).toFixed(3)+"vw + 12px)}}";
+}
+function setPs(d){ps=Math.max(28,Math.min(60,ps+d));save("db_ps",ps);applyPs()}
+$("sm").onclick=function(){setPs(-4)};
+$("bg").onclick=function(){setPs(4)};
+applyPs();
 var th=load("db_theme",null);if(th)document.documentElement.setAttribute("data-theme",th);
 if(DRIVE_API_KEY&&DRIVE_FOLDER_ID){
  $("add").style.display="none";$("clr").style.display="none";
