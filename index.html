@@ -105,6 +105,8 @@ var DRIVE_FOLDER_ID="19b74JjylrfwbQxFWw7SsBXLYGVk9NBKQ";    // ID da pasta do Dr
 var REFRESH_MIN=60;        // a cada quantos minutos buscar fotos novas
 var SLIDE_SEC=15;          // segundos por foto
 var SHUFFLE=true;          // true = ordem aleatória
+var AGENDA_URL="https://script.google.com/macros/s/AKfycbwGa4CKfIJcXWbf2wkcFhMlkSwc7scPCqLz1JHXv8q2ujFNz9ngekc8VQKbpIgEwcVo/exec";   // cole aqui a URL /exec
+var AGENDA_MIN=15;   // atualizar a cada X minutos
 /* ================================================== */
 var $=function(i){return document.getElementById(i)};
 function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -121,6 +123,7 @@ function tick(){var n=new Date();$("time").textContent=pad(n.getHours())+":"+pad
 tick();setInterval(tick,10000);
 
 /* Calendário */
+var gcal=load("db_gcal",{});
 var events=load("db_events",{});
 var now=new Date(),vy=now.getFullYear(),vm=now.getMonth(),sel=key(now);
 function drawCal(){
@@ -130,13 +133,14 @@ function drawCal(){
  for(i=0;i<42;i++){
   if(i%7===0)h+='<div class="row">';
   d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);k=key(d);
-  cl="day"+(d.getMonth()!==vm?" o":"")+(k===tk?" t":"")+(k===sel?" s":"")+(events[k]&&events[k].length?" e":"");
+  cl="day"+(d.getMonth()!==vm?" o":"")+(k===tk?" t":"")+(k===sel?" s":"")+((events[k]&&events[k].length)||(gcal[k]&&gcal[k].length)?" e":"");
   h+='<div class="'+cl+'" data-k="'+k+'">'+d.getDate()+'</div>';
   if(i%7===6){h+='</div>';if(i>=34&&new Date(start.getFullYear(),start.getMonth(),start.getDate()+i+1).getMonth()!==vm)break}
  }
  $("grid").innerHTML=h;
  var p=sel.split("-");$("sel").textContent="Dia "+parseInt(p[2],10)+" de "+MESES[parseInt(p[1],10)-1];
- var L=events[sel]||[],e="";
+ var L=events[sel]||[],G=gcal[sel]||[],e="";
+for(i=0;i<G.length;i++)e+='<div class="it"><span class="x"><b style="color:var(--ac)">'+esc(G[i].h||"Dia todo")+'</b> '+esc(G[i].t)+'</span></div>';;
  for(i=0;i<L.length;i++)e+='<div class="it"><span class="x">'+esc(L[i])+'</span><button class="del" data-i="'+i+'">×</button></div>';
  $("evs").innerHTML=e||'<div class="empty">Nada marcado neste dia.</div>';
 }
@@ -146,6 +150,13 @@ $("evin").onkeydown=function(ev){if(ev.keyCode===13&&this.value.replace(/\s/g,""
 $("pv").onclick=function(){vm--;if(vm<0){vm=11;vy--}drawCal()};
 $("nx").onclick=function(){vm++;if(vm>11){vm=0;vy++}drawCal()};
 drawCal();
+function loadAgenda(){
+ if(!AGENDA_URL)return;
+ var x=new XMLHttpRequest();x.open("GET",AGENDA_URL);
+ x.onload=function(){try{gcal=JSON.parse(x.responseText);save("db_gcal",gcal);drawCal()}catch(e){}};
+ x.send();
+}
+loadAgenda();setInterval(loadAgenda,AGENDA_MIN*60000);
 setInterval(function(){var k=key(new Date());if(k!==window.__lastDay){window.__lastDay=k}},60000);
 
 /* Tarefas */
