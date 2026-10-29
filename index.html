@@ -14,8 +14,7 @@ body{background:var(--bg);color:var(--tx);font-family:"Segoe UI",Roboto,"Helveti
 #app{display:-webkit-flex;display:flex;height:100%;padding:12px}
 .col{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-width:0;margin:0 6px}
 #left{-webkit-flex:0 0 31%;flex:0 0 31%}
-#mid{-webkit-flex:1 1 0;flex:1 1 0}
-#right{-webkit-flex:0 0 27%;flex:0 0 27%}
+#right{-webkit-flex:1 1 0;flex:1 1 0}
 .card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;min-height:0}
 .card:last-child{margin-bottom:0}
 .grow{-webkit-flex:1 1 0;flex:1 1 0;overflow:auto;-webkit-overflow-scrolling:touch}
@@ -44,19 +43,19 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
 .tabs{display:-webkit-flex;display:flex;overflow-x:auto;margin-bottom:8px}
 .tab{white-space:nowrap;margin-right:6px;font-size:14px;padding:7px 12px}
 .tab.on{background:var(--ac);color:#1b1206;font-weight:600}
-#photo{position:relative;-webkit-flex:1 1 0;flex:1 1 0;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#243b6b,#6b3a5e 60%,#c46a3a)}
-.ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:cover;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
+#pw{-webkit-flex:none;flex:none;width:80vh;max-width:100%;margin-left:auto}
+#photo{position:relative;width:100%;height:0;padding-top:56.25%;border-radius:18px;overflow:hidden;background:#000}
+.ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
 .ly.on{opacity:1}
 #tools{position:absolute;right:10px;bottom:10px;opacity:.85}
 #tools button{background:rgba(0,0,0,.55);color:#fff;margin-left:6px;font-size:13px}
-#hint{position:absolute;left:0;right:0;top:45%;text-align:center;color:#fff;font-size:18px;text-shadow:0 1px 6px rgba(0,0,0,.6);padding:0 20px}
+#hint{position:absolute;left:0;right:0;top:40%;text-align:center;color:#fff;font-size:18px;text-shadow:0 1px 6px rgba(0,0,0,.6);padding:0 20px}
 @media (orientation:portrait){
  body{overflow:auto}
  #app{display:block;height:auto}
  .col{margin:0}
- #left,#mid,#right{display:block}
- #photo{height:50vh;margin-bottom:12px;-webkit-flex:none;flex:none}
- #mid{margin-bottom:12px}
+ #left,#right{display:block}
+ #pw{width:100%;margin-top:12px}
  .card{margin-bottom:12px}
 }
 </style>
@@ -79,25 +78,26 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
    <input type="text" id="evin" placeholder="Novo compromisso…">
   </div>
  </div>
- <div class="col" id="mid">
-  <div id="photo">
-   <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
-   <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
-   <div id="tools">
-    <button id="fs">Tela cheia</button>
-    <button id="th">Tema</button>
-    <button id="clr">Limpar fotos</button>
-    <button id="add" class="ac">+ Fotos</button>
-   </div>
-   <input type="file" id="file" accept="image/*" multiple style="display:none">
-  </div>
- </div>
  <div class="col" id="right">
-  <div class="card grow" style="margin-bottom:0">
+  <div class="card grow">
    <div class="hd"><b>Tarefas</b><button id="nl">+ Lista</button></div>
    <div class="tabs" id="tabs"></div>
    <input type="text" id="tdin" placeholder="Nova tarefa…">
    <div id="todos"></div>
+  </div>
+  <div id="pw">
+  <div id="photo">
+    <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
+    <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
+    <div id="tools">
+     <button id="fs">Tela cheia</button>
+     <button id="th">Tema</button>
+     <button id="clr">Limpar fotos</button>
+     <button id="add" class="ac">+ Fotos</button>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple style="display:none">
+   </div>
+ 
   </div>
  </div>
 </div>
