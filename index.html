@@ -51,7 +51,22 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
 #photo{position:relative;width:100%;height:0;padding-top:56.25%;border-radius:18px;overflow:hidden;background:#000}
 .ly{position:absolute;left:0;top:0;right:0;bottom:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s}
 .ly.on{opacity:1}
-#tools{position:absolute;right:10px;bottom:10px;opacity:.85}
+#tools{position:absolute;right:10px;bottom:10px;left:10px;opacity:.85;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-justify-content:flex-end;justify-content:flex-end}
+#tools button{margin-top:4px}
+#ck,#ag{display:none}
+#ck{position:absolute;left:10px;top:10px;z-index:3;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;padding:6px 14px}
+#time2{font-size:4.2vw;font-weight:200;line-height:1.1}
+#date2{font-size:1.4vw;color:#d5dce8}
+#ag{position:fixed;left:12px;bottom:12px;margin:0;overflow:auto;-webkit-overflow-scrolling:touch;z-index:4}
+.ev{display:inline-block;margin:0 22px 8px 0;font-size:19px}
+.ev b{color:var(--ac);margin-right:4px}
+@media (orientation:landscape){
+ html.l2 #left{display:none}
+ html.l2 #ck{display:block}
+ html.l2 #ag{display:block}
+ html.l2 #pw{right:auto;bottom:auto;left:12px;top:12px}
+ html.l2 #right{position:fixed;top:12px;bottom:12px;right:6px;padding-bottom:0}
+}
 #tools button{background:rgba(0,0,0,.55);color:#fff;margin-left:6px;font-size:13px;padding:6px 10px}
 #hint{position:absolute;left:0;right:0;top:40%;text-align:center;color:#fff;font-size:18px;text-shadow:0 1px 6px rgba(0,0,0,.6);padding:0 20px}
 @media (orientation:portrait){
@@ -92,9 +107,11 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
   </div>
   <div id="pw">
   <div id="photo"><!-- v5: canto inferior direito, 16:9, foto inteira -->
+    <div id="ck"><div id="time2">--:--</div><div id="date2"></div></div>
     <div class="ly on" id="l0"></div><div class="ly" id="l1"></div>
     <div id="hint">Toque em “+ Fotos” para escolher imagens do tablet</div>
     <div id="tools">
+      <button id="ly">Layout</button>
       <button id="sm">−</button>
     <button id="bg">+</button>
     <button id="th">Tema</button>
@@ -107,6 +124,7 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:var(--card2)
   </div>
  </div>
 </div>
+<div class="card" id="ag"><div class="hd"><b>Hoje</b></div><div id="agl"></div></div>
 <script>
 (function(){
 /* ====== CONFIGURAÇÃO — edite só estas linhas ====== */
@@ -129,7 +147,8 @@ var MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto
 
 /* Relógio */
 function tick(){var n=new Date();$("time").textContent=pad(n.getHours())+":"+pad(n.getMinutes());
- $("date").textContent=DIAS[n.getDay()]+", "+n.getDate()+" de "+MESES[n.getMonth()]}
+ $("date").textContent=DIAS[n.getDay()]+", "+n.getDate()+" de "+MESES[n.getMonth()];
+ $("time2").textContent=$("time").textContent;$("date2").textContent=$("date").textContent}
 tick();setInterval(tick,10000);
 
 /* Calendário */
@@ -160,7 +179,14 @@ $("evin").onkeydown=function(ev){if(ev.keyCode===13&&this.value.replace(/\s/g,""
 $("pv").onclick=function(){vm--;if(vm<0){vm=11;vy--}drawCal()};
 $("nx").onclick=function(){vm++;if(vm>11){vm=0;vy++}drawCal()};
 drawCal();
-function agendaOk(d){if(d&&typeof d==="object"){gcal=d;save("db_gcal",gcal);drawCal()}}
+function drawAg(){
+ var k=key(new Date()),G=gcal[k]||[],L=events[k]||[],h="",i;
+ for(i=0;i<G.length;i++)h+='<span class="ev"><b>'+esc(G[i].h||"Dia todo")+'</b> '+esc(G[i].t)+'</span>';
+ for(i=0;i<L.length;i++)h+='<span class="ev">'+esc(L[i])+'</span>';
+ $("agl").innerHTML=h||'<div class="empty">Nada marcado para hoje.</div>';
+}
+function agendaOk(d){if(d&&typeof d==="object"){gcal=d;save("db_gcal",gcal);drawCal();drawAg()}}
+drawAg();
 function agendaJsonp(){
  var s=document.createElement("script");
  window.__agenda=function(d){agendaOk(d);if(s.parentNode)s.parentNode.removeChild(s)};
@@ -177,7 +203,7 @@ function loadAgenda(){
  }catch(e){agendaJsonp()}
 }
 loadAgenda();setInterval(loadAgenda,AGENDA_MIN*60000);
-setInterval(function(){var k=key(new Date());if(k!==window.__lastDay){window.__lastDay=k}},60000);
+setInterval(function(){var k=key(new Date());if(k!==window.__lastDay){window.__lastDay=k;drawAg()}},60000);
 
 /* Tarefas */
 var lists=load("db_lists",[{n:"Hoje",i:[]},{n:"Compras",i:[]}]),cur=load("db_cur",0);
@@ -272,16 +298,21 @@ $("clr").onclick=function(){if(!confirm("Apagar todas as fotos do painel?"))retu
 $("th").onclick=function(){var r=document.documentElement,c=r.getAttribute("data-theme");
  var light=c?c==="light":(window.matchMedia&&matchMedia("(prefers-color-scheme:light)").matches);
  var n=light?"dark":"light";r.setAttribute("data-theme",n);save("db_theme",n)};
-var ps=load("db_ps",36);
+var lay=load("db_lay",1);if(lay!==2)lay=1;
+var PS={1:load("db_ps",36),2:load("db_ps2",60)},RG={1:[28,60],2:[40,66]};
 function applyPs(){
- var st=document.getElementById("psz");
+ var st=document.getElementById("psz"),p=PS[lay],h=(p*0.5625).toFixed(3),c;
  if(!st){st=document.createElement("style");st.id="psz";document.head.appendChild(st)}
- st.textContent="@media (orientation:landscape){#pw{width:"+ps+"vw}#right{padding-bottom:calc("+(ps*0.5625).toFixed(3)+"vw + 12px)}}";
+ if(lay===1)c="#pw{width:"+p+"vw}#right{padding-bottom:calc("+h+"vw + 12px)}";
+ else c="html.l2 #pw{width:"+p+"vw}html.l2 #right{left:calc("+p+"vw + 18px)}html.l2 #ag{width:"+p+"vw;top:calc("+h+"vw + 24px)}";
+ st.textContent="@media (orientation:landscape){"+c+"}";
 }
-function setPs(d){ps=Math.max(28,Math.min(60,ps+d));save("db_ps",ps);applyPs()}
+function applyLay(){document.documentElement.className=lay===2?"l2":"";applyPs()}
+function setPs(d){PS[lay]=Math.max(RG[lay][0],Math.min(RG[lay][1],PS[lay]+d));save(lay===1?"db_ps":"db_ps2",PS[lay]);applyPs()}
 $("sm").onclick=function(){setPs(-4)};
 $("bg").onclick=function(){setPs(4)};
-applyPs();
+$("ly").onclick=function(){lay=lay===1?2:1;save("db_lay",lay);applyLay()};
+applyLay();
 var th=load("db_theme",null);if(th)document.documentElement.setAttribute("data-theme",th);
 if(DRIVE_API_KEY&&DRIVE_FOLDER_ID){
  $("add").style.display="none";$("clr").style.display="none";
