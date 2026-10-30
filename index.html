@@ -99,9 +99,8 @@ input[type=text]{width:100%;font:inherit;color:var(--tx);background:rgba(255,255
  </div>
  <div class="col" id="right">
   <div class="card grow">
-   <div class="hd"><b>Tarefas</b><button id="nl">+ Lista</button></div>
+   <div class="hd"><b>Tarefas</b></div>
    <div class="tabs" id="tabs"></div>
-   <input type="text" id="tdin" placeholder="Nova tarefa…">
    <div id="todos"></div>
   </div>
   <div id="pw">
@@ -134,6 +133,9 @@ var SLIDE_SEC=15;          // segundos por foto
 var SHUFFLE=true;          // true = ordem aleatória
 var AGENDA_URL="https://script.google.com/macros/s/AKfycbwGa4CKfIJcXWbf2wkcFhMlkSwc7scPCqLz1JHXv8q2ujFNz9ngekc8VQKbpIgEwcVo/exec";         // cole aqui a URL /exec do Apps Script
 var AGENDA_MIN=15;         // atualizar a agenda a cada X minutos
+var TASKS_URL="https://script.google.com/macros/s/AKfycby9afBwZ4ZV4U5tyUB0vD9mdbw9O0ACMZAd_2o-cKVV8e-B_JNya-WGxN4mcxXC1q6q7w/exec";          // cole aqui a URL /exec do Apps Script das Tarefas
+var TASKS_MIN=5;           // atualizar as tarefas a cada X minutos
+var SHOW_DONE=true;        // true = mostra tarefas concluídas (riscadas)
 /* ================================================== */
 var $=function(i){return document.getElementById(i)};
 function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -204,25 +206,37 @@ function loadAgenda(){
 loadAgenda();setInterval(loadAgenda,AGENDA_MIN*60000);
 setInterval(function(){var k=key(new Date());if(k!==window.__lastDay){window.__lastDay=k;drawAg()}},60000);
 
-/* Tarefas */
-var lists=load("db_lists",[{n:"Hoje",i:[]},{n:"Compras",i:[]}]),cur=load("db_cur",0);
-if(cur>=lists.length)cur=0;
-function saveT(){save("db_lists",lists);save("db_cur",cur)}
+/* Tarefas (Google Tasks, somente leitura) */
+var gt=load("db_gt",[]),cur=load("db_gcur",0);
+function dm(s){var p=s.split("-");return p[2]+"/"+p[1]}
 function drawT(){
- var i,h="";
- for(i=0;i<lists.length;i++)h+='<button class="tab'+(i===cur?" on":"")+'" data-t="'+i+'">'+esc(lists[i].n)+'</button>';
- $("tabs").innerHTML=h;
- var L=lists[cur].i;h="";
- for(i=0;i<L.length;i++)h+='<div class="it'+(L[i].d?" d":"")+'"><span class="chk" data-c="'+i+'">'+(L[i].d?"✓":"")+'</span><span class="x" data-c="'+i+'">'+esc(L[i].t)+'</span><button class="del" data-x="'+i+'">×</button></div>';
- $("todos").innerHTML=h||'<div class="empty">Lista vazia.</div>';
+ var i,h="",t,L,tk=key(new Date());
+ if(cur>=gt.length)cur=0;
+ if(gt.length>1)for(i=0;i<gt.length;i++)h+='<button class="tab'+(i===cur?" on":"")+'" data-t="'+i+'">'+esc(gt[i].n)+'</button>';
+ $("tabs").innerHTML=h;$("tabs").style.display=h?"flex":"none";
+ L=gt.length?gt[cur].i:[];h="";
+ for(i=0;i<L.length;i++){t=L[i];if(t.d&&!SHOW_DONE)continue;
+  h+='<div class="it'+(t.d?" d":"")+'"'+(t.s?' style="margin-left:26px"':'')+'><span class="chk">'+(t.d?"✓":"")+'</span><span class="x">'+esc(t.t)+'</span>'+(t.u?'<span style="font-size:13px;margin-left:8px;color:'+(!t.d&&t.u<tk?"#ff6b6b":"var(--mut)")+'">'+dm(t.u)+'</span>':'')+'</div>'}
+ $("todos").innerHTML=h||'<div class="empty">'+(!TASKS_URL?"Configure TASKS_URL no topo do arquivo.":gt.length?"Nenhuma tarefa.":"Carregando tarefas…")+'</div>';
 }
-$("tabs").onclick=function(ev){var t=ev.target.getAttribute("data-t");if(t!==null){if(parseInt(t,10)===cur&&confirm("Apagar a lista “"+lists[cur].n+"”?")&&lists.length>1){lists.splice(cur,1);cur=0}else cur=parseInt(t,10);saveT();drawT()}};
-$("todos").onclick=function(ev){var t=ev.target,c=t.getAttribute("data-c"),x=t.getAttribute("data-x"),L=lists[cur].i;
- if(c!==null){L[c].d=!L[c].d;L.sort(function(a,b){return (a.d?1:0)-(b.d?1:0)})}
- else if(x!==null)L.splice(parseInt(x,10),1);else return;saveT();drawT()};
-$("tdin").onkeydown=function(ev){if(ev.keyCode===13&&this.value.replace(/\s/g,"")){lists[cur].i.unshift({t:this.value,d:false});this.value="";saveT();drawT()}};
-$("nl").onclick=function(){var n=prompt("Nome da nova lista:");if(n){lists.push({n:n,i:[]});cur=lists.length-1;saveT();drawT()}};
-drawT();
+$("tabs").onclick=function(ev){var t=ev.target.getAttribute("data-t");if(t!==null){cur=parseInt(t,10);save("db_gcur",cur);drawT()}};
+function tasksOk(d){if(d&&typeof d==="object"&&d.length>=0){gt=d;save("db_gt",gt);drawT()}}
+function tasksJsonp(){
+ var sc=document.createElement("script");
+ window.__tasks=function(d){tasksOk(d);if(sc.parentNode)sc.parentNode.removeChild(sc)};
+ sc.src=TASKS_URL+(TASKS_URL.indexOf("?")>-1?"&":"?")+"callback=__tasks&_="+new Date().getTime();
+ document.head.appendChild(sc);
+}
+function loadTasks(){
+ if(!TASKS_URL)return;
+ try{
+  var x=new XMLHttpRequest();x.open("GET",TASKS_URL);
+  x.onload=function(){var d=null;try{d=JSON.parse(x.responseText)}catch(e){}if(d)tasksOk(d);else tasksJsonp()};
+  x.onerror=tasksJsonp;
+  x.send();
+ }catch(e){tasksJsonp()}
+}
+drawT();loadTasks();setInterval(loadTasks,TASKS_MIN*60000);
 
 /* Fotos (IndexedDB, redimensionadas) */
 var urls=[],idb=null,mem=[];
